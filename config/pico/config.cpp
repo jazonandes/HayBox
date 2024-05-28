@@ -107,6 +107,16 @@ void setup() {
             backends = new CommunicationBackend *[backend_count] {
                 primary_backend, new B0XXInputViewer(input_sources, input_source_count)
             };
+        } else if (button_holds.y) {
+            // If no console detected and Y is held on plugin then use Switch USB backend.
+            NintendoSwitchBackend::RegisterDescriptor();
+            backend_count = 1;
+            primary_backend = new NintendoSwitchBackend(input_sources, input_source_count);
+            backends = new CommunicationBackend *[backend_count] { primary_backend };
+
+            // Default to FGC mode.
+            primary_backend->SetGameMode(new FgcMode(socd::SOCD_NEUTRAL, socd::SOCD_DIR2_PRIORITY));
+            return;
         } else {
             // Default to XInput mode if no console detected and no other mode forced.
             backend_count = 2;
