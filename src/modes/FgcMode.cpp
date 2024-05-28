@@ -23,7 +23,7 @@ void FgcMode::UpdateDigitalOutputs(InputState &inputs, OutputState &outputs) {
     outputs.leftStickClick = inputs.c_up;
     outputs.rightStickClick = inputs.c_left;
 
-    // Right hand bottom row
+    // Right hand bottom row 
     outputs.a = inputs.x;
     outputs.b = inputs.b;
     outputs.triggerRDigital = inputs.z;
