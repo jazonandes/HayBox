@@ -4,7 +4,7 @@ FgcMode::FgcMode(socd::SocdType horizontal_socd, socd::SocdType vertical_socd) {
     _socd_pair_count = 2;
     _socd_pairs = new socd::SocdPair[_socd_pair_count]{
         socd::SocdPair{&InputState::left,   &InputState::right, horizontal_socd         },
-        socd::SocdPair{ &InputState::down,  &InputState::mod_x, vertical_socd           },
+        socd::SocdPair{&InputState::down,   &InputState::mod_x, vertical_socd           },
     };
 }
 
@@ -19,19 +19,19 @@ void FgcMode::UpdateDigitalOutputs(InputState &inputs, OutputState &outputs) {
     outputs.start = inputs.start;
     outputs.select = inputs.c_right;
     outputs.home = inputs.l && inputs.start;
-    outputs.capture = inputs.l  && inputs.mod_x;
+    outputs.capture = inputs.l  && inputs.mod_y;
     outputs.leftStickClick = inputs.c_up;
     outputs.rightStickClick = inputs.c_left;
 
-    // Right hand bottom row 
+    // Right hand bottom row
     outputs.a = inputs.x;
     outputs.b = inputs.b;
     outputs.triggerRDigital = inputs.z;
     outputs.triggerLDigital = inputs.up;
 
     // Right hand top row
-    outputs.x = inputs.r;
-    outputs.y = inputs.y;
+    outputs.x = inputs.y;
+    outputs.y = inputs.r;
     outputs.buttonR = inputs.lightshield;
     outputs.buttonL = inputs.midshield;
 }
