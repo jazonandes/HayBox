@@ -115,7 +115,7 @@ void setup() {
             backends = new CommunicationBackend *[backend_count] { primary_backend };
 
             // Default to FGC mode.
-            primary_backend->SetGameMode(new FgcMode(socd::SOCD_NEUTRAL, socd::SOCD_DIR2_PRIORITY));
+            primary_backend->SetGameMode(new FgcMode(socd::SOCD_NEUTRAL, socd::SOCD_NEUTRAL));
             return;
         } else {
             // Default to XInput mode if no console detected and no other mode forced.
