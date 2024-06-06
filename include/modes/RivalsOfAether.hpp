@@ -7,7 +7,7 @@
 
 class RivalsOfAether : public ControllerMode {
   public:
-    RivalsOfAether(socd::SocdType socd_type);
+    RivalsOfAether(socd::SocdType horizontal_socd, socd::SocdType vertical_socd);
 
   private:
     void UpdateDigitalOutputs(InputState &inputs, OutputState &outputs);
