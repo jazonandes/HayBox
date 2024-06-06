@@ -38,7 +38,7 @@ void RivalsOfAether::UpdateDigitalOutputs(InputState &inputs, OutputState &outpu
     outputs.x = inputs.r;
     outputs.y = inputs.y;
     outputs.buttonR = inputs.a;
-    outputs.buttonL = inputs.up;
+    outputs.buttonL = inputs.c_up;
 }
 
 void RivalsOfAether::UpdateAnalogOutputs(InputState &inputs, OutputState &outputs) {
