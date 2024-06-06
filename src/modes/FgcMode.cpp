@@ -31,7 +31,7 @@ void FgcMode::UpdateDigitalOutputs(InputState &inputs, OutputState &outputs) {
     // Right hand bottom row
     outputs.a = inputs.b;
     outputs.b = inputs.x;
-    outputs.triggerRDigital = inputs.up;
+    outputs.triggerRDigital = inputs.c_up;
     outputs.triggerLDigital = inputs.z;
 
     // Right hand top row
