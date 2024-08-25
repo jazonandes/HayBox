@@ -7,10 +7,11 @@
 
 class ToughLoveArena : public KeyboardMode {
   public:
-    ToughLoveArena(socd::SocdType socd_type);
+    ToughLoveArena();
+    bool isMelee() {return false;};
 
   private:
-    void UpdateKeys(InputState &inputs);
+    void UpdateKeys(const InputState &inputs);
 };
 
 #endif

@@ -7,11 +7,12 @@
 
 class MKWii : public ControllerMode {
   public:
-    MKWii(socd::SocdType socd_type);
+    MKWii();
+    bool isMelee() {return false;};
 
   private:
-    void UpdateDigitalOutputs(InputState &inputs, OutputState &outputs);
-    void UpdateAnalogOutputs(InputState &inputs, OutputState &outputs);
+    void UpdateDigitalOutputs(const InputState &inputs, OutputState &outputs);
+    void UpdateAnalogOutputs(const InputState &inputs, OutputState &outputs);
 };
 
 #endif

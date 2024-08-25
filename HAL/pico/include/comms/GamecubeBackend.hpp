@@ -9,22 +9,21 @@
 class GamecubeBackend : public CommunicationBackend {
   public:
     GamecubeBackend(
+        InputState &inputs,
         InputSource **input_sources,
         size_t input_source_count,
         uint data_pin,
-        bool nerfOn,
         PIO pio = pio0,
         int sm = -1,
         int offset = -1
     );
-    ~GamecubeBackend();
+    CommunicationBackendId BackendId();
     void SendReport();
     int GetOffset();
 
   private:
-    GamecubeConsole *_gamecube;
+    GamecubeConsole _gamecube;
     gc_report_t _report;
-    bool _nerfOn;
 };
 
 #endif

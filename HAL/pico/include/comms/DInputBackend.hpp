@@ -9,13 +9,13 @@
 
 class DInputBackend : public CommunicationBackend {
   public:
-    DInputBackend(InputSource **input_sources, size_t input_source_count, bool nerfOn);
+    DInputBackend(InputState &inputs, InputSource **input_sources, size_t input_source_count);
     ~DInputBackend();
+    CommunicationBackendId BackendId();
     void SendReport();
 
   private:
-    TUGamepad *_gamepad;
-    bool _nerfOn;
+    TUGamepad _gamepad;
 };
 
 #endif

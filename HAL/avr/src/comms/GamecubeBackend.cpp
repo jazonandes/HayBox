@@ -1,46 +1,32 @@
 #include "comms/GamecubeBackend.hpp"
-#include "comms/hwtimer.hpp"
 
 #include "core/ControllerMode.hpp"
 #include "core/InputSource.hpp"
 
-#include "modes/MeleeLimits.hpp"
-
 #include <Nintendo.h>
 
-//#define TIMINGDEBUG
-
 GamecubeBackend::GamecubeBackend(
+    InputState &inputs,
     InputSource **input_sources,
     size_t input_source_count,
     int polling_rate,
     int data_pin
 )
-    : CommunicationBackend(input_sources, input_source_count) {
-    _gamecube = new CGamecubeConsole(data_pin);
+    : CommunicationBackend(inputs, input_sources, input_source_count),
+      _gamecube(data_pin) {
     _data = defaultGamecubeData;
 
+    /*
     if (polling_rate > 0) {
         // Delay used between input updates to postpone them until right before the
         // next poll, while also leaving time (850us) for processing to finish.
-        _delay = 0;//(1000000 / polling_rate) - 850;
-        _nerfOn = true;
+        _delay = (1000000 / polling_rate) - 850;
     } else {
-        // If polling rate is set to 0 (A was held), disable ~~the delay~~ the nerfs.
+        // If polling rate is set to 0, disable the delay.
         _delay = 0;
-        _nerfOn = false;
     }
-
-    //check button hold for disabling nerf
-    ScanInputs();
-
-    //Serial.begin(115200);
-    //Serial.println("Testing serial output");
-
-    //debug output for timing experiments
-#ifdef TIMINGDEBUG
-    pinMode(21, OUTPUT);
-#endif
+    */
+    _delay = 0;
 
     //Set up hardware timer
     TCCR1A = 0;
@@ -48,8 +34,8 @@ GamecubeBackend::GamecubeBackend(
     zeroTcnt1();
 }
 
-GamecubeBackend::~GamecubeBackend() {
-    delete _gamecube;
+CommunicationBackendId GamecubeBackend::BackendId() {
+    return COMMS_BACKEND_GAMECUBE;
 }
 
 void GamecubeBackend::SendReport() {
@@ -88,16 +74,6 @@ void GamecubeBackend::SendReport() {
                 sampleCount--;
                 sampleSpacing = minLoop / sampleCount;
             }
-            /*
-            Serial.print("Loop time: ");
-            Serial.println(loopTime);
-            Serial.print("Fastest Loop: ");
-            Serial.println(minLoop);
-            Serial.print("Sample count: ");
-            Serial.println(sampleCount);
-            Serial.print("Sample spacing: ");
-            Serial.println(sampleSpacing);
-            */
         }
         // Make sure to respond while measuring.
         ScanInputs();
@@ -128,16 +104,6 @@ void GamecubeBackend::SendReport() {
         _data.report.right = _outputs.triggerRAnalog + 31;
     } else {
         if(loopTime > minLoop+(minLoop >> 1)) {//if the loop time is 50% longer than expected
-            /*
-            Serial.println("Loop time too long?");
-            Serial.print("Loop time: ");
-            Serial.println(loopTime);
-            Serial.print("TCNT1: ");
-            Serial.println(readTcnt1());
-            zeroTcnt1();
-            Serial.print("TCNT1: ");
-            Serial.println(readTcnt1());
-            */
             detect = true;//stop scanning inputs briefly and re-measure timings
             loopCount = 0;
             sampleCount = 1;
@@ -149,9 +115,6 @@ void GamecubeBackend::SendReport() {
         //we want the last sample to begin [850 + extra computation time] before the beginning of the last poll to give room for the sample and the travel time+nerf computation
         //
         for (uint i = 0; i < sampleCount; i++) {
-#ifdef TIMINGDEBUG
-            digitalWrite(21, LOW);
-#endif
 
             const uint16_t nerfTime = 250/4;
             const uint16_t computationTime = 700/4 + nerfTime;//*_nerfOn;//depends on the platform; 4us steps.
@@ -218,19 +181,9 @@ void GamecubeBackend::SendReport() {
                 _data.report.left = _outputs.triggerLAnalog + 31;
                 _data.report.right = _outputs.triggerRAnalog + 31;
             }
-
-#ifdef TIMINGDEBUG
-            digitalWrite(21, count ? HIGH : LOW);
-#endif
         }
     }
 
-#ifdef TIMINGDEBUG
-    digitalWrite(21, HIGH);
-#endif
     // Send outputs to console.
     status = _gamecube->write(_data);
-#ifdef TIMINGDEBUG
-    digitalWrite(21, LOW);
-#endif
 }

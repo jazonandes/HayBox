@@ -510,21 +510,21 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
             pivotZoneHist[i].stale = true;
         }
         //track the inputs that can cause changes to coordinates
-        prevInputs.left = inputs.left;
-        prevInputs.right = inputs.right;
-        prevInputs.down = inputs.down;
-        prevInputs.up = inputs.up;
-        prevInputs.c_left = inputs.c_left;
-        prevInputs.c_right = inputs.c_right;
-        prevInputs.c_down = inputs.c_down;
-        prevInputs.c_up = inputs.c_up;
-        prevInputs.b = inputs.b;
-        prevInputs.l = inputs.l;//we don't care about recording these
-        prevInputs.r = inputs.r;
-        prevInputs.lightshield = inputs.lightshield;
-        prevInputs.midshield = inputs.midshield;
-        prevInputs.mod_x = inputs.mod_x;
-        prevInputs.mod_y = inputs.mod_y;
+        prevInputs.lf3 = inputs.lf3;//left;
+        prevInputs.lf1 = inputs.lf1;//right;
+        prevInputs.lf2 = inputs.lf2;//down;
+        prevInputs.rf4 = inputs.rf4;//up;
+        prevInputs.rt3 = inputs.rt3;//c_left;
+        prevInputs.rt5 = inputs.rt5;//c_right;
+        prevInputs.rt2 = inputs.rt2;//c_down;
+        prevInputs.rt4 = inputs.rt4;//c_up;
+        prevInputs.rf1 = inputs.rf1;//b;
+        prevInputs.lf4 = inputs.lf4;//l;//we don't care about recording these
+        prevInputs.rf5 = inputs.rf5;//r;
+        prevInputs.rf7 = inputs.rf7;//lightshield;
+        prevInputs.rf8 = inputs.rf8;//midshield;
+        prevInputs.lt1 = inputs.lt1;//mod_x;
+        prevInputs.lt2 = inputs.lt2;//mod_y;
 
         initialized = true;
     }
@@ -550,7 +550,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     // if it was nerfing them, un-nerf them
     bool wavedashSkip = false;
     static bool wavedashWasNerfed = false;
-    if(inputs.l || inputs.r) {
+    if(inputs.lf4/*l*/ || inputs.rf5/*r*/) {
         //check angles to see if it's in a shallow wavedash region
         //the trigger was the only input that changed, potentially causing a retargeting without restarting the travel time
         const uint8_t xIn = rawOutputIn.leftStickX;
@@ -601,22 +601,22 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
             } else {
                 wavedashWasNerfed = false;
                 //only skip inputs if the L or R press caused the change in coordinates
-                if(!(prevInputs.l || prevInputs.r)) {
+                if(!(prevInputs.lf4 /*l*/ || prevInputs.rf5 /*r*/)) {
                     //check if the L/R press coincides with a change in coordinate, indicating L/R NDM
                     if(
-                        prevInputs.left == inputs.left &&
-                        prevInputs.right == inputs.right &&
-                        prevInputs.down == inputs.down &&
-                        prevInputs.up == inputs.up &&
-                        prevInputs.c_left == inputs.c_left &&
-                        prevInputs.c_right == inputs.c_right &&
-                        prevInputs.c_down == inputs.c_down &&
-                        prevInputs.c_up == inputs.c_up &&
-                        prevInputs.b == inputs.b &&
-                        prevInputs.lightshield == inputs.lightshield &&
-                        prevInputs.midshield == inputs.midshield &&
-                        prevInputs.mod_x == inputs.mod_x &&
-                        prevInputs.mod_y == inputs.mod_y
+                        prevInputs.lf3 == inputs.lf3 /*left*/ &&
+                        prevInputs.lf1 == inputs.lf1 /*right*/ &&
+                        prevInputs.lf2 == inputs.lf2 /*down*/ &&
+                        prevInputs.rf4 == inputs.rf4 /*up*/ &&
+                        prevInputs.rt3 == inputs.rt3 /*c_left*/ &&
+                        prevInputs.rt5 == inputs.rt5 /*c_right*/ &&
+                        prevInputs.rt2 == inputs.rt2 /*c_down*/ &&
+                        prevInputs.rt4 == inputs.rt4 /*c_up*/ &&
+                        prevInputs.rf4 == inputs.rf4 /*b*/ &&
+                        prevInputs.rf7 == inputs.rf7 /*lightshield*/ &&
+                        prevInputs.rf8 == inputs.rf8 /*midshield*/ &&
+                        prevInputs.lt1 == inputs.lt1 /*mod_x*/ &&
+                        prevInputs.lt2 == inputs.lt2 /*mod_y*/
                     ) {
                         //then we need to skip to the new coordinate
                         //fuzz it
@@ -658,7 +658,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
             //mark as having been nerfed so we can undo it later
             wavedashWasNerfed = true;
         }
-    } else if(!(inputs.l || inputs.r) && (prevInputs.l || prevInputs.r)) {
+    } else if(!(inputs.lf4 /*l*/ || inputs.rf5/*r*/) && (prevInputs.lf4 /*l*/ || prevInputs.rf5/*r*/)) {
         //if nerfed, then de-nerf once L and R are no longer pressed
         if(wavedashWasNerfed) {
             const uint8_t xIn = rawOutputIn.leftStickX;
@@ -674,21 +674,21 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
         }
     }
     //record previous inputs
-    prevInputs.left = inputs.left;
-    prevInputs.right = inputs.right;
-    prevInputs.down = inputs.down;
-    prevInputs.up = inputs.up;
-    prevInputs.c_left = inputs.c_left;
-    prevInputs.c_right = inputs.c_right;
-    prevInputs.c_down = inputs.c_down;
-    prevInputs.c_up = inputs.c_up;
-    prevInputs.b = inputs.b;
-    prevInputs.l = inputs.l;
-    prevInputs.r = inputs.r;
-    prevInputs.lightshield = inputs.lightshield;
-    prevInputs.midshield = inputs.midshield;
-    prevInputs.mod_x = inputs.mod_x;
-    prevInputs.mod_y = inputs.mod_y;
+    prevInputs.lf3 = inputs.lf3;//left;
+    prevInputs.lf1 = inputs.lf1;//right;
+    prevInputs.lf2 = inputs.lf2;//down;
+    prevInputs.rf4 = inputs.rf4;//up;
+    prevInputs.rt3 = inputs.rt3;//c_left;
+    prevInputs.rt5 = inputs.rt5;//c_right;
+    prevInputs.rt2 = inputs.rt2;//c_down;
+    prevInputs.rt4 = inputs.rt4;//c_up;
+    prevInputs.rf1 = inputs.rf1;//b;
+    prevInputs.lf4 = inputs.lf4;//l;//we don't care about recording these
+    prevInputs.rf5 = inputs.rf5;//r;
+    prevInputs.rf7 = inputs.rf7;//lightshield;
+    prevInputs.rf8 = inputs.rf8;//midshield;
+    prevInputs.lt1 = inputs.lt1;//mod_x;
+    prevInputs.lt2 = inputs.lt2;//mod_y;
 
     //calculate travel from the previous step
     uint8_t prelimAX;

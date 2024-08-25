@@ -2,27 +2,23 @@
 #define _MODES_MELEE18BUTTON_HPP
 
 #include "core/ControllerMode.hpp"
-#include "core/socd.hpp"
 #include "core/state.hpp"
-#include "MeleeLimits.hpp"
 
 typedef struct {
     bool crouch_walk_os = false;
-    bool teleport_coords = false;
 } Melee18ButtonOptions;
 
 class Melee18Button : public ControllerMode {
   public:
-    Melee18Button(socd::SocdType socd_type, Melee18ButtonOptions options = {});
-    bool isMelee();
+    Melee18Button(Melee18ButtonOptions options = {});
 
   private:
     Melee18ButtonOptions _options;
-    bool _horizontal_socd;
+    bool horizontal_socd;
 
     void HandleSocd(InputState &inputs);
-    void UpdateDigitalOutputs(InputState &inputs, OutputState &outputs);
-    void UpdateAnalogOutputs(InputState &inputs, OutputState &outputs);
+    void UpdateDigitalOutputs(const InputState &inputs, OutputState &outputs);
+    void UpdateAnalogOutputs(const InputState &inputs, OutputState &outputs);
 };
 
 #endif
