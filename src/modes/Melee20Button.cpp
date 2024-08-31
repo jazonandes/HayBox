@@ -208,7 +208,7 @@ void Melee20Button::UpdateAnalogOutputs(const InputState &inputs, OutputState &o
             if (!inputs.rf1) {
                 // 3250 7625 - 23.09deg - 26 61 - modY
                 // 3625 7000 - 27.38deg - 29 56 - modY + cDown
-                // 4375 7000 - 32.01deg - 35 56 - modY + cLeft
+                // 4500 6875 - 33.21deg - 36 55 - modY + cLeft (this is shield drop straight down but the cstick will buffer)
                 // 5125 7000 - 36.21deg - 41 56 - modY + cUp
                 // 5750 7125 - 38.90deg - 46 57 - modY + cRight
                 outputs.leftStickX = 128 + (directions.x * 26);
@@ -218,8 +218,10 @@ void Melee20Button::UpdateAnalogOutputs(const InputState &inputs, OutputState &o
                     outputs.leftStickY = 128 + (directions.y * 56);
                 }
                 if (inputs.rt3) {
-                    outputs.leftStickX = 128 + (directions.x * 35);
-                    outputs.leftStickY = 128 + (directions.y * 56);
+                    //outputs.leftStickX = 128 + (directions.x * 35);
+                    //outputs.leftStickY = 128 + (directions.y * 56);
+                    outputs.leftStickX = 128 + (directions.x * 36);
+                    outputs.leftStickY = 128 + (directions.y * 55);
                 }
                 if (inputs.rt4) {
                     outputs.leftStickX = 128 + (directions.x * 41);
@@ -233,7 +235,7 @@ void Melee20Button::UpdateAnalogOutputs(const InputState &inputs, OutputState &o
                 /* Extended Up B Angles */
                 // 3875 9125 - 23.01deg - 31 73 - modY + B
                 // 4625 8750 - 27.86deg - 37 70 - modY + B + cDown
-                // 5250 8500 - 31.70deg - 42 68 - modY + B + cLeft
+                // 5375 8250 - 33.08deg - 42 68 - modY + B + cLeft
                 // 5750 7875 - 36.14deg - 46 63 - modY + B + cUp
                 // 5750 7125 - 38.90deg - 46 57 - modY + B + cRight
                 outputs.leftStickX = 128 + (directions.x * 31);
@@ -243,8 +245,8 @@ void Melee20Button::UpdateAnalogOutputs(const InputState &inputs, OutputState &o
                     outputs.leftStickY = 128 + (directions.y * 70);
                 }
                 if (inputs.rt3) {
-                    outputs.leftStickX = 128 + (directions.x * 42);
-                    outputs.leftStickY = 128 + (directions.y * 68);
+                    outputs.leftStickX = 128 + (directions.x * 43);
+                    outputs.leftStickY = 128 + (directions.y * 66);
                 }
                 if (inputs.rt4) {
                     outputs.leftStickX = 128 + (directions.x * 46);

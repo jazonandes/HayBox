@@ -1,5 +1,7 @@
 # HayBox Limited Edition
 
+Configurator: cdown
+
 This is a firmware designed for experimenting with travel time and other subframe nerfs for Melee based on Haystack's HayBox.
 
 We believe that digital controllers, when used for Melee, are a little overtuned relative to GCC.
