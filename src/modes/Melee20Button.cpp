@@ -22,6 +22,14 @@ void Melee20Button::HandleSocd(InputState &inputs) {
         inputs.lf2 = false;
         inputs.rf4 = false;
     }
+    if (inputs.rt3 && inputs.rt5) {
+        inputs.rt3 = false;
+        inputs.rt5 = false;
+    }
+    if (inputs.rt2 && inputs.rt4) {
+        inputs.rt2 = false;
+        inputs.rt4 = false;
+    }
     InputMode::HandleSocd(inputs);
 }
 
