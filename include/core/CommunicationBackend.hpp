@@ -29,8 +29,8 @@ class CommunicationBackend {
     bool isMelee();
     void LimitOutputs(const uint32_t sampleSpacing);
 
+    InputState &_inputs;//normally protected
   protected:
-    InputState &_inputs;
     InputSource **_input_sources;
     size_t _input_source_count;
 

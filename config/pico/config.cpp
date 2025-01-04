@@ -122,7 +122,7 @@ void loop1() {
         }
         if (isMelee) {
             //get exactly 2 khz input scanning
-            const uint32_t interval = 500;//microseconds
+            const uint32_t interval = 1000;//microseconds
             const uint32_t quarterInterval = interval/4;//unit of 4 microseconds
             const uint32_t beforeMicros = micros();
             uint32_t afterMicros = beforeMicros;
@@ -133,6 +133,49 @@ void loop1() {
             gpio_input.UpdateInputs(backends[0]->GetInputs());
             for (size_t i = 0; i < backend_count; i++) {
                 backends[i]->ScanInputs();
+                /*
+                //begin timing macro
+                //times given in half millisecond intervals
+                const uint32_t frame = 16;
+                const uint32_t hold = 8;
+                static uint32_t counter = 0;
+                static uint32_t test = 0;
+                if((backends[i]->_inputs.lt1 && backends[i]->_inputs.rf7) || test == 1) { //modx and lightshield
+                    test = 1;
+                    const uint32_t loop = 6*frame;
+                    if(counter % loop <= 6*hold) {
+                        backends[i]->_inputs.lf1 = true;
+                    } else {
+                        backends[i]->_inputs.lf1 = false;
+                    }
+                    backends[i]->_inputs.lt1 = false;
+                    backends[i]->_inputs.rf7 = false;
+                    counter++;
+                    if(counter > 2000) {
+                        backends[i]->_inputs.lf1 = false;
+                        counter = 0;
+                        test = 0;
+                    }
+                }
+                if((backends[i]->_inputs.lt1 && backends[i]->_inputs.rf8) || test == 2) { //modx and midshield
+                    test = 2;
+                    const uint32_t loop = 5*frame; //should trigger sdi limits
+                    if(counter % loop <= 5*hold) {
+                        backends[i]->_inputs.lf1 = true;
+                    } else {
+                        backends[i]->_inputs.lf1 = false;
+                    }
+                    backends[i]->_inputs.lt1 = false;
+                    backends[i]->_inputs.rf8 = false;
+                    counter++;
+                    if(counter > 2000) {
+                        backends[i]->_inputs.lf1 = false;
+                        counter = 0;
+                        test = 0;
+                    }
+                }
+                //end timing macro
+                */
                 backends[i]->UpdateOutputs();
                 backends[i]->LimitOutputs(quarterInterval);
             }

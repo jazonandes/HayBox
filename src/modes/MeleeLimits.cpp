@@ -24,15 +24,15 @@
 #define TRAVELTIME_EASY3 8//ms for 112+cubic it takes 83% to get to dash, for 80+linear it takes 80% to get to dash
 #define TRAVELTIME_CROSS 12//ms to cross gate; unused
 #define TRAVELTIME_INTERNAL 12//ms for "easy" to "internal"; 2/3 frame
-#define TRAVELTIME_SLOW (5.5*16)//ms for tap SDI nerfing, 4 frames
+#define TRAVELTIME_SLOW 88//(5.5*16)//ms for tap SDI nerfing, 5.5 frames
 
 #define TIMELIMIT_DOWNUP (16*3*250)//units of 4us; how long after a crouch to upward input should it begin a jump?
 #define JUMP_TIME (16*2*250)//units of 4us; after a recent crouch to upward input, always hold full up for 2 frames
 
 #define TIMELIMIT_FRAME 4167//(16.66...*250)//units of 4us; 1 frame, for reference
 #define TIMELIMIT_HALFFRAME 2083//(8.33...*250)//units of 4us; 1/2 frame
-#define TIMELIMIT_DEBOUNCE (6*250)//units of 4us; 6ms;
-#define TIMELIMIT_SIMUL (2*250)//units of 4us; 3ms: if the latest inputs are less than 2 ms apart then don't nerf cardiag
+#define TIMELIMIT_DEBOUNCE 1500//(6*250)//units of 4us; 6ms;
+#define TIMELIMIT_SIMUL 500//(2*250)//units of 4us; 2ms: if the latest inputs are less than 2 ms apart then don't nerf cardiag
 
 #define TIMELIMIT_TAPSHUTOFF 16000//4 frames for tap jump shutoff
 
@@ -231,7 +231,7 @@ uint8_t popcount_zone(const uint8_t bitsIn) {
 
 uint8_t isTapSDI(const sdizonestate zoneHistory[HISTORYLEN],
                  const uint8_t currentIndex,
-                 const bool currentTime,
+                 const uint16_t currentTime,
                  const uint16_t sampleSpacing) {
     uint8_t output = 0;
 
@@ -260,7 +260,7 @@ uint8_t isTapSDI(const sdizonestate zoneHistory[HISTORYLEN],
         if(!staleList[3] && (timeDiff0 < TIMELIMIT_TAP_PLUS && timeDiff1 < TIMELIMIT_TAP && timeDiff0 > TIMELIMIT_DEBOUNCE)) {
             if((zoneList[0] == 0) || (zoneList[1] == 0)) {//if one of the pairs of zones is zero, it's tapping a cardinal (or tapping a diagonal modifier)
                 output = output | BITS_SDI_TAP_CARD;
-            } else if(popCur+popOne == 3) { //one is cardinal and the other is diagonal
+            } else {//if(popCur != 0 && popOne != 0) { //one is cardinal and the other is diagonal
                 output = output | BITS_SDI_TAP_DIAG;
             }
         }
@@ -374,28 +374,38 @@ Fixed88 quarticEasing(Fixed88 i){
 }
 */
 
-void travelTimeCalc(const uint16_t samplesElapsed,
+void travelTimeCalc(const uint16_t currentTime,
+                    const uint16_t inputTime,
                     const uint16_t sampleSpacing,//units of 4us
                     const uint8_t msTravel,
-                    const uint8_t targetX,
-                    const uint8_t targetY,
                     const uint8_t startX,
                     const uint8_t startY,
                     const uint8_t destX,
                     const uint8_t destY,
                     const travelType type,
-                    bool &oldChange,//if the time gets too long, set it to true
                     bool &doneTraveling,//apply tt if false; when travel time is done, set it to true
                     uint8_t &outX,
                     uint8_t &outY) {
-    //check for old data; this prevents overflow from causing issues
-    if(samplesElapsed > 5*16*2) {//5 frames * 16 ms * max 2 samples per frame
-        oldChange = true;
-        doneTraveling = true;
+    //we need to clean up random input time changes that occur?
+    //We only want input time to change if output coordinates also change.
+    //If output coordinates don't change, then input time should be preserved.
+    static uint16_t cleanInputTime = inputTime;
+    static uint8_t oldDestX = destX;
+    static uint8_t oldDestY = destY;
+    //we also need to clean up travel time too...
+    static uint8_t cleanMsTravel = msTravel;
+    if(destX != oldDestX || destY != oldDestY) {
+        cleanInputTime = inputTime;
+        cleanMsTravel = msTravel;
     }
+    oldDestX = destX;
+    oldDestY = destY;
+    //const uint16_t samplesElapsed = currentTime - inputTime;
+    const uint16_t samplesElapsed = currentTime - cleanInputTime;
+
     const uint16_t timeElapsed = samplesElapsed*sampleSpacing;//units of 4 us
     if(type == T_Lin) {
-        const uint16_t travelTimeElapsed = timeElapsed/msTravel;//250 times the fraction of the travel time elapsed
+        const uint16_t travelTimeElapsed = timeElapsed/cleanMsTravel;//250 times the fraction of the travel time elapsed
 
         //For the following 256s, they used to be 250, but AVR had division issues
         // and would only be able to reach a value of 6 when returning to neutral,
@@ -412,13 +422,12 @@ void travelTimeCalc(const uint16_t samplesElapsed,
         outX = (uint8_t) newX;
         outY = (uint8_t) newY;
     } else if (type == T_Delay) {
-        if(timeElapsed <= msTravel*250) {
+        if(timeElapsed <= cleanMsTravel*250) {
             outX = startX;
             outY = startY;
         } else {
             outX = destX;
             outY = destY;
-            doneTraveling = true;
         }
 //    } else{
 //        uint16_t usTravel4 = msTravel*250;//units of 4 us
@@ -451,10 +460,17 @@ void travelTimeCalc(const uint16_t samplesElapsed,
 //        outY = uint8_t(fixedToInt(fixedY) + 128);
     }
 
-    if(oldChange || doneTraveling || msTravel == 0) {
+    if(timeElapsed > msTravel*250 && !doneTraveling) {
+        doneTraveling = true;
+    }
+    if(doneTraveling /*|| msTravel == 0*/) {
         outX = destX;
         outY = destY;
     }
+    //If you use the non-clean versions of these, they both occasionally jump
+    outY = cleanInputTime % 256;
+    //outY = cleanMsTravel;
+    //outY = currentTime % 256;
 }
 
 void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
@@ -479,7 +495,6 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     //  rapid eighth-circling (cardinal diagonal neutral repeat)
     //    Increase travel time on cardinal and lock out later diagonals.
 
-    static bool oldA = true;
     static bool doneTraveling = true;
 
     static uint16_t currentTime = 0;
@@ -691,21 +706,28 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     prevInputs.lt2 = inputs.lt2;//mod_y;
 
     //calculate travel from the previous step
-    uint8_t prelimAX;
-    uint8_t prelimAY;
+    uint8_t prelimAX = rawOutputIn.leftStickX;
+    uint8_t prelimAY = rawOutputIn.leftStickY;
     uint8_t prelimCX = rawOutputIn.rightStickX;
     uint8_t prelimCY = rawOutputIn.rightStickY;
-    travelTimeCalc(currentTime-aHistory[currentIndexA].timestamp,
+
+    //test for SDI in the raw inputs
+    const uint8_t sdi = isTapSDI(sdiZoneHist, currentIndexSDI, currentTime, sampleSpacing);
+    //if cardinal tap SDI
+    if(sdi & BITS_SDI_TAP_CARD) {
+        aHistory[currentIndexA].tt = max(aHistory[currentIndexA].tt, TRAVELTIME_SLOW);
+        delayType = T_Lin;
+    }
+
+    travelTimeCalc(currentTime,
+                   aHistory[currentIndexA].timestamp,
                    sampleSpacing,
                    aHistory[currentIndexA].tt,
-                   aHistory[currentIndexA].x,
-                   aHistory[currentIndexA].y,
                    aHistory[currentIndexA].x_start,
                    aHistory[currentIndexA].y_start,
                    aHistory[currentIndexA].x_end,
                    aHistory[currentIndexA].y_end,
                    delayType,
-                   oldA,
                    doneTraveling,
                    prelimAX,
                    prelimAY);
@@ -844,8 +866,8 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     }
 
     //if it's wank sdi (TODO) or diagonal tap SDI, lock out the cross axis
-    const uint8_t sdi = isTapSDI(sdiZoneHist, currentIndexSDI, currentTime, sampleSpacing);
-    static bool sdiIsNerfed = false;
+    //we use the sdi variable from earlier
+    static bool sdiIsNerfed = false;//only for lockouts, not travel time
     if(sdi & (BITS_SDI_TAP_DIAG | BITS_SDI_TAP_CRDG | BITS_SDI_WANK)){
         if(sdi & (ZONE_L | ZONE_R)) {
             //lock the cross axis
@@ -907,16 +929,21 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     }
 
     //if we have a new coordinate, record the new info, the travel time'd locked out stick coordinate, and set travel time
-    if(aHistory[currentIndexA].x != rawOutputIn.leftStickX || aHistory[currentIndexA].y != rawOutputIn.leftStickY) {
+    const uint8_t xIn = rawOutputIn.leftStickX;
+    const uint8_t yIn = rawOutputIn.leftStickY;
+    static uint8_t prevX = xIn;
+    static uint8_t prevY = yIn;
+    //prelimAY = 5*currentIndexA;//we found that there are no new inputs causing the jumps
+    //prelimAY = currentTime % 256;//we found that time isn't jumping
+    if(prevX != xIn || prevY != yIn) {
         //don't update things if this is a wavedash in a banned region
         if(!wavedashSkip) {
-            oldA = false;
             doneTraveling = false;
             const uint8_t oldIndexA = currentIndexA;
             currentIndexA = (currentIndexA + 1) % HISTORYLEN;
 
-            const uint8_t xIn = rawOutputIn.leftStickX;
-            const uint8_t yIn = rawOutputIn.leftStickY;
+            prevX = xIn;
+            prevY = yIn;
 
             uint8_t xInRand = xIn;
             uint8_t yInRand = yIn;
@@ -930,26 +957,25 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
             aHistory[currentIndexA].x_start = prelimAX;
             aHistory[currentIndexA].y_start = prelimAY;
 
-            uint8_t oldX = aHistory[oldIndexA].x;
-            uint8_t oldY = aHistory[oldIndexA].y;
-            if(prelimAX == oldX) {
-                if(xInRand > oldX) {
+            //make the initial travel begin instantly 1 unit towards the destination
+            if(prelimAX == prevX) {
+                if(xInRand > prevX) {
                     aHistory[currentIndexA].x_start++;
                 }
-                if(xInRand < oldX) {
+                if(xInRand < prevX) {
                     aHistory[currentIndexA].x_start--;
                 }
             }
-            if(prelimAY == oldY) {
-                if(yInRand > oldY) {
+            if(prelimAY == prevY) {
+                if(yInRand > prevY) {
                     aHistory[currentIndexA].y_start++;
                 }
-                if(yInRand < oldY) {
+                if(yInRand < prevY) {
                     aHistory[currentIndexA].y_start--;
                 }
             }
 
-            uint8_t prelimTT = TRAVELTIME_EASY1;
+            uint8_t prelimTT = TRAVELTIME_EASY3;
             //if the destination is not an "easy" coordinate
             const uint8_t easiness = isEasy(xIn, yIn);
             if(easiness == 1) {
@@ -965,11 +991,15 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
                 prelimTT = TRAVELTIME_INTERNAL;
                 delayType = T_Lin;
             }
+            //we actually want this test to happen super early
+            /*
             //if cardinal tap SDI
             if(sdi & BITS_SDI_TAP_CARD) {
                 prelimTT = max(prelimTT, TRAVELTIME_SLOW);
                 delayType = T_Lin;
             }
+            */
+            prelimTT = TRAVELTIME_SLOW;//========================debug
             aHistory[currentIndexA].tt = prelimTT;
         }
     }
