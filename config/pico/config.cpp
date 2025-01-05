@@ -122,7 +122,7 @@ void loop1() {
         }
         if (isMelee) {
             //get exactly 2 khz input scanning
-            const uint32_t interval = 1000;//microseconds
+            const uint32_t interval = 500;//microseconds
             const uint32_t quarterInterval = interval/4;//unit of 4 microseconds
             const uint32_t beforeMicros = micros();
             uint32_t afterMicros = beforeMicros;

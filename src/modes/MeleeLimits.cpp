@@ -386,26 +386,11 @@ void travelTimeCalc(const uint16_t currentTime,
                     bool &doneTraveling,//apply tt if false; when travel time is done, set it to true
                     uint8_t &outX,
                     uint8_t &outY) {
-    //we need to clean up random input time changes that occur?
-    //We only want input time to change if output coordinates also change.
-    //If output coordinates don't change, then input time should be preserved.
-    static uint16_t cleanInputTime = inputTime;
-    static uint8_t oldDestX = destX;
-    static uint8_t oldDestY = destY;
-    //we also need to clean up travel time too...
-    static uint8_t cleanMsTravel = msTravel;
-    if(destX != oldDestX || destY != oldDestY) {
-        cleanInputTime = inputTime;
-        cleanMsTravel = msTravel;
-    }
-    oldDestX = destX;
-    oldDestY = destY;
-    //const uint16_t samplesElapsed = currentTime - inputTime;
-    const uint16_t samplesElapsed = currentTime - cleanInputTime;
+    const uint16_t samplesElapsed = currentTime - inputTime;
 
     const uint16_t timeElapsed = samplesElapsed*sampleSpacing;//units of 4 us
     if(type == T_Lin) {
-        const uint16_t travelTimeElapsed = timeElapsed/cleanMsTravel;//250 times the fraction of the travel time elapsed
+        const uint16_t travelTimeElapsed = timeElapsed/msTravel;//250 times the fraction of the travel time elapsed
 
         //For the following 256s, they used to be 250, but AVR had division issues
         // and would only be able to reach a value of 6 when returning to neutral,
@@ -422,7 +407,7 @@ void travelTimeCalc(const uint16_t currentTime,
         outX = (uint8_t) newX;
         outY = (uint8_t) newY;
     } else if (type == T_Delay) {
-        if(timeElapsed <= cleanMsTravel*250) {
+        if(timeElapsed <= msTravel*250) {
             outX = startX;
             outY = startY;
         } else {
@@ -463,14 +448,10 @@ void travelTimeCalc(const uint16_t currentTime,
     if(timeElapsed > msTravel*250 && !doneTraveling) {
         doneTraveling = true;
     }
-    if(doneTraveling /*|| msTravel == 0*/) {
+    if(doneTraveling) {
         outX = destX;
         outY = destY;
     }
-    //If you use the non-clean versions of these, they both occasionally jump
-    outY = cleanInputTime % 256;
-    //outY = cleanMsTravel;
-    //outY = currentTime % 256;
 }
 
 void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
@@ -712,9 +693,9 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     uint8_t prelimCY = rawOutputIn.rightStickY;
 
     //test for SDI in the raw inputs
-    const uint8_t sdi = isTapSDI(sdiZoneHist, currentIndexSDI, currentTime, sampleSpacing);
+    const uint8_t tapSDI = isTapSDI(sdiZoneHist, currentIndexSDI, currentTime, sampleSpacing);
     //if cardinal tap SDI
-    if(sdi & BITS_SDI_TAP_CARD) {
+    if(tapSDI & BITS_SDI_TAP_CARD) {
         aHistory[currentIndexA].tt = max(aHistory[currentIndexA].tt, TRAVELTIME_SLOW);
         delayType = T_Lin;
     }
@@ -736,7 +717,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     //if we are in a new pivot zone, record the new zone
     //we're keeping these in sequence so we copy them all
     if(pivotZoneHist[0].zone != pivotZone(prelimAX)) {
-        for(int i = HISTORYLEN-1; i >= 0; i--) {
+        for(int i = HISTORYLEN-2; i >= 0; i--) {
             pivotZoneHist[i+1].timestamp = pivotZoneHist[i].timestamp;
             pivotZoneHist[i+1].zone = pivotZoneHist[i].zone;
             pivotZoneHist[i+1].stale = pivotZoneHist[i].stale;
@@ -868,8 +849,8 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
     //if it's wank sdi (TODO) or diagonal tap SDI, lock out the cross axis
     //we use the sdi variable from earlier
     static bool sdiIsNerfed = false;//only for lockouts, not travel time
-    if(sdi & (BITS_SDI_TAP_DIAG | BITS_SDI_TAP_CRDG | BITS_SDI_WANK)){
-        if(sdi & (ZONE_L | ZONE_R)) {
+    if(tapSDI & (BITS_SDI_TAP_DIAG | BITS_SDI_TAP_CRDG | BITS_SDI_WANK)){
+        if(tapSDI & (ZONE_L | ZONE_R)) {
             //lock the cross axis
             prelimAY = ANALOG_STICK_NEUTRAL;
             //make sure future cross axis travel time begins at the origin
@@ -880,7 +861,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
             //make sure that future cardinal travel time begins where it was before
             //aHistory[currentIndexA].x_end = prelimAX;
             sdiIsNerfed = true;
-        } else if(sdi & (ZONE_U | ZONE_D)) {
+        } else if(tapSDI & (ZONE_U | ZONE_D)) {
             //lock the cross axis
             prelimAX = ANALOG_STICK_NEUTRAL;
             //make sure future cross axis travel time begins at the origin
@@ -894,13 +875,13 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
         }//one or the other should occur
         //debug to see if SDI was detected
         /*
-        if(sdi & BITS_SDI_TAP_CARD) {
+        if(tapSDI & BITS_SDI_TAP_CARD) {
             prelimCX = 200;
         }
-        if(sdi & BITS_SDI_TAP_CRDG) {
+        if(tapSDI & BITS_SDI_TAP_CRDG) {
             prelimCY = 200;
         }
-        if(sdi & BITS_SDI_WANK) {
+        if(tapSDI & BITS_SDI_WANK) {
             prelimCX = 10;
         }
         */
@@ -947,7 +928,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
 
             uint8_t xInRand = xIn;
             uint8_t yInRand = yIn;
-            randomizeCoord(xInRand, yInRand, currentTime);
+//            randomizeCoord(xInRand, yInRand, currentTime);
 
             aHistory[currentIndexA].timestamp = currentTime;
             aHistory[currentIndexA].x = xIn;
@@ -991,15 +972,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
                 prelimTT = TRAVELTIME_INTERNAL;
                 delayType = T_Lin;
             }
-            //we actually want this test to happen super early
-            /*
-            //if cardinal tap SDI
-            if(sdi & BITS_SDI_TAP_CARD) {
-                prelimTT = max(prelimTT, TRAVELTIME_SLOW);
-                delayType = T_Lin;
-            }
-            */
-            prelimTT = TRAVELTIME_SLOW;//========================debug
+            //prelimTT = TRAVELTIME_SLOW;//========================debug
             aHistory[currentIndexA].tt = prelimTT;
         }
     }
