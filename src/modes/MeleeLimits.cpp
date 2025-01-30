@@ -20,10 +20,10 @@
 #define MELEE_RIM_RAD3 8979/*if x^2+y^2 >= this, it's past the rim and 8ms*/
 
 #define TRAVELTIME_EASY1 6//ms
-#define TRAVELTIME_EASY2 7//ms
-#define TRAVELTIME_EASY3 8//ms for 112+cubic it takes 83% to get to dash, for 80+linear it takes 80% to get to dash
+#define TRAVELTIME_EASY2 6//ms
+#define TRAVELTIME_EASY3 6//ms for 112+cubic it takes 83% to get to dash, for 80+linear it takes 80% to get to dash
 #define TRAVELTIME_CROSS 12//ms to cross gate; unused
-#define TRAVELTIME_INTERNAL 12//ms for "easy" to "internal"; 2/3 frame
+#define TRAVELTIME_INTERNAL 6//ms for "easy" to "internal"; 2/3 frame
 #define TRAVELTIME_SLOW 88//(5.5*16)//ms for tap SDI nerfing, 5.5 frames
 
 #define TIMELIMIT_DOWNUP (16*3*250)//units of 4us; how long after a crouch to upward input should it begin a jump?
@@ -58,7 +58,7 @@ enum travelType{T_Lin, T_Quad, T_Cubic, T_Quart, T_Delay};
 #define ZONE_L   0b0000'0100
 #define ZONE_R   0b0000'1000
 
-#define BITS_SDI      0b1111'0000
+#define BITS_SDI          0b1111'0000
 #define BITS_SDI_WANK     0b0001'0000
 #define BITS_SDI_TAP_CARD 0b0010'0000
 #define BITS_SDI_TAP_DIAG 0b0100'0000
@@ -339,6 +339,24 @@ uint8_t isTapSDI(const sdizonestate zoneHistory[HISTORYLEN],
         //                                                            within the time limit
         if(adjacentDiag && origCount && cardCount && diagCount > 1 && shortTime) {
             output = output | BITS_SDI_WANK;
+        }
+    }
+
+    //wank sdi around a diagonal
+    //7 8 9
+    //4 5 6
+    //1 2 3
+    //
+    //this would be 4 7 8 7 type deal
+
+    //first check if another one isn't already triggered
+    if(!output) {
+        //were there two of the same diagonal on alternating inputs?
+        if((zoneList[0] == zoneList[2]) && (popcount_zone(zoneList[0]) == 2)) {
+            //check duration
+            if((timeList[0] - timeList[2])*sampleSpacing < TIMELIMIT_WANK && !staleList[2]) {
+                output = output | BITS_SDI_WANK;
+            }
         }
     }
 
