@@ -1,6 +1,6 @@
 #include "modes/Melee20Button.hpp"
 
-//legacy wavedash angle
+//wider wavedash angle
 
 #define ANALOG_STICK_MIN (128-112)
 #define ANALOG_STICK_NEUTRAL 128
@@ -113,14 +113,15 @@ void Melee20Button::UpdateAnalogOutputs(const InputState &inputs, OutputState &o
                 outputs.leftStickY = 128 + (directions.y * _options.custom_airdodge.y);
             } else {
                 if (!inputs.rf1) {
-                    // MX + L, R, LS, and MS + q1/2/3/4 = 6375 3750 = 51 30
-                    outputs.leftStickX = 128 + (directions.x * 51);
-                    outputs.leftStickY = 128 + (directions.y * 30);
+                    // MX + L, R, LS, and MS + q1/2/3/4 =
+                    // 6375 3750 - 24.84 deg - 54 25 (will be overridden for LR digital)
+                    outputs.leftStickX = 128 + (directions.x * 54);
+                    outputs.leftStickY = 128 + (directions.y * 25);
                 } else {
                     // Extended angle to have magnitude similarity for DI
-                    // 8500 5125 - 31.09 deg - 68 41
-                    outputs.leftStickX = 128 + (directions.x * 68);
-                    outputs.leftStickY = 128 + (directions.y * 41);
+                    // 9000 4250 - 25.28 deg - 72 34 (will be overridden for LR digital but remain rim)
+                    outputs.leftStickX = 128 + (directions.x * 72);
+                    outputs.leftStickY = 128 + (directions.y * 34);
                 }
             }
         }
