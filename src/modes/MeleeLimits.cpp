@@ -630,7 +630,7 @@ void limitOutputs(const uint16_t sampleSpacing,//in units of 4us
                         prevInputs.rt5 == inputs.rt5 /*c_right*/ &&
                         prevInputs.rt2 == inputs.rt2 /*c_down*/ &&
                         prevInputs.rt4 == inputs.rt4 /*c_up*/ &&
-                        prevInputs.rf4 == inputs.rf4 /*b*/ &&
+                        prevInputs.rf1 == inputs.rf1 /*b*/ &&
                         prevInputs.rf7 == inputs.rf7 /*lightshield*/ &&
                         prevInputs.rf8 == inputs.rf8 /*midshield*/ &&
                         prevInputs.lt1 == inputs.lt1 /*mod_x*/ &&
