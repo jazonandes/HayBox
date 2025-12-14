@@ -55,6 +55,8 @@ void Melee20Button::UpdateDigitalOutputs(const InputState &inputs, OutputState &
         outputs.dpadDown = inputs.rt2;
         outputs.dpadLeft = inputs.rt3;
         outputs.dpadRight = inputs.rt5;
+    } else { // make start press require Mod X + Mod Y
+        outputs.start = false;
     }
 
     if (inputs.mb3)
