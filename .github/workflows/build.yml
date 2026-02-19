@@ -15,14 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - env: b0xx_r4
-            bin_ext: uf2
+#          - env: b0xx_r4
+#            bin_ext: uf2
           - env: pico
             bin_ext: uf2
-          - env: schism
-            bin_ext: uf2
-          - env: ranadigital
-            bin_ext: uf2
+#          - env: schism
+#            bin_ext: uf2
+#          - env: ranadigital
+#            bin_ext: uf2
 #          - env: arduino_uno
 #            bin_ext: hex
 #          - env: arduino_nano
